@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Browser: Example URL",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "browser.py",
+            "args": [
+                "https://example.com"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
