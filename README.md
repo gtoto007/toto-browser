@@ -19,6 +19,9 @@ python3 browser.py https://example.com
 # View page source
 python3 browser.py view-source:https://example.com
 
+# Loads multiple webpages
+python3 browser.py https://example.com https://www.freesoft.org/CIE/Topics/88.htm
+
 # Load HTML directly
 python3 browser.py 'data:text/html,<h1>Hello world!</h1>'
 ```
