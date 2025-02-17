@@ -14,13 +14,13 @@ It supports rendering web pages from http, https, and data URLs, as well as disp
 
 ```python
 # Load a webpage
-render("https://example.com")
+python3 browser.py https://example.com
 
 # View page source
-render("view-source:https://example.com")
+python3 browser.py view-source:https://example.com
 
 # Load HTML directly
-render("data:text/html,<h1>Hello world!</h1>")
+python3 browser.py 'data:text/html,<h1>Hello world!</h1>'
 ```
 
 ## Requirements

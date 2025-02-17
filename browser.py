@@ -122,10 +122,6 @@ def render(url):
 def show(body, view_source):
     import re
 
-    # Replace HTML entities with their corresponding characters
-    body = body.replace("&lt;", "<")
-    body = body.replace("&gt;", ">")
-
     if view_source:
         print(body)
         return
@@ -139,15 +135,35 @@ def show(body, view_source):
         elif in_tag and c == "/":
             print("\n", end="")
         elif not in_tag and c != "\n":
+            # Replace HTML entities with their corresponding characters
+            if c == "&lt;":
+                c = "<"
+            elif c == "&gt;":
+                c = ">"
+
             print(c, end="")
 
 
+def main():
+    import sys
+
+    if len(sys.argv) != 2:
+        print("Usage: python browser.py <URL>")
+        sys.exit(1)
+
+    # Handle quoted URLs by removing outer quotes if present
+    url = sys.argv[1]
+    if (url.startswith('"') and url.endswith('"')) or (
+        url.startswith("'") and url.endswith("'")
+    ):
+        url = url[1:-1]
+
+    try:
+        render(url)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
-    print("***Render https schema URL ***")
-    render("https://browser.engineering/examples/example1-simple.html")
-
-    print("***Render view-source Schema URL***")
-    render("view-source:https://browser.engineering/examples/example1-simple.html")
-
-    print("***Render Data schema URL ***")
-    render("data:text/html,<h1>Hello world!</h1>")
+    main()
