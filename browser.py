@@ -79,8 +79,18 @@ class URL_WEB:
         # socket.close()
         return response_headers, content
 
+    def is_socket_valid(self, sock):
+        try:
+            # Check if the socket is closed or invalid
+            sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+            return True
+        except (socket.error, OSError):
+            return False
+
     def get_socket(self, scheme, host, port):
-        if self.host not in URL_WEB.sockets:
+        if self.host not in URL_WEB.sockets or not self.is_socket_valid(
+            URL_WEB.sockets[self.host]
+        ):
             URL_WEB.sockets[self.host] = self.create_socket(
                 self.scheme, self.host, self.port
             )
