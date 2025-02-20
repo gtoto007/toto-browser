@@ -9,6 +9,7 @@ It supports rendering web pages from http, https, and data URLs, as well as disp
 - Supports HTTP, HTTPS, and data URLs
 - View page source with `view-source:` prefix
 - Basic HTML rendering
+- Persistent connection for requests with the same host
 
 ## Usage
 
