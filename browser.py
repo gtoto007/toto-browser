@@ -1,11 +1,25 @@
+from pprint import pprint
 from idlelib.rpc import response_queue
 
 from URLs.URL import URL
 
+MAX_REDIRECTS = 4
 
-def render(url):
+
+def render(url, redirect_count=0):
     url = URL.build(url)
-    headers, body = url.request()
+    headers, status, body = url.request()
+    print("Response Headers:")
+    pprint(headers)
+    if (status >= "300" and status < "400") and "location" in headers:
+        if redirect_count >= MAX_REDIRECTS:
+            raise "Too many redirects"
+
+        print("Redirecting to: ", headers["location"])
+        render(headers["location"], redirect_count + 1)
+        return
+
+    print("Body")
     show(body, url.view_source)
 
 
@@ -45,7 +59,7 @@ def main():
         else [
             "https://www.freesoft.org/CIE/Topics/4.htm",
             "https://www.freesoft.org/CIE/Topics/88.htm",
-            "http://browser.engineering/redirect",
+            "view-source:http://giuseppetoto.it",
         ]
     )
 

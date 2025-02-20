@@ -6,4 +6,4 @@ class DATA_URL:
         self.type, self.body = self.type.split(",", 1)
 
     def request(self):
-        return [], self.body
+        return [], 200, self.body

@@ -46,7 +46,7 @@ class WEB_URL:
 
     def file_request(self):
         with open(self.path, "r") as f:
-            return [], f.read()
+            return [], 200, f.read()
 
     def web_request(self):
         request = f"GET {self.path} HTTP/1.1\r\n"
@@ -63,6 +63,8 @@ class WEB_URL:
             "rb", encoding="utf8", newline="\r\n", errors="replace"
         )
         line = response.readline().decode("utf-8")  #'HTTP/1.0 200 OK
+        version, status, explanation = line.split(" ", 2)
+
         response_headers = {}
         while True:
             line = response.readline().decode("utf-8")
@@ -75,8 +77,8 @@ class WEB_URL:
         content = response.read(int(response_headers.get("content-length", 0))).decode(
             "utf-8"
         )
-        # socket.close()
-        return response_headers, content
+
+        return response_headers, status, content
 
     def is_socket_valid(self, sock):
         try:
@@ -87,13 +89,12 @@ class WEB_URL:
             return False
 
     def get_socket(self, scheme, host, port):
+        key = scheme + "://" + host
         if self.host not in WEB_URL.sockets or not self.is_socket_valid(
-            WEB_URL.sockets[self.host]
+            WEB_URL.sockets[key]
         ):
-            WEB_URL.sockets[self.host] = self.create_socket(
-                self.scheme, self.host, self.port
-            )
-        return WEB_URL.sockets[self.host]
+            WEB_URL.sockets[key] = self.create_socket(self.scheme, self.host, self.port)
+        return WEB_URL.sockets[key]
 
     def create_socket(self, scheme, host, port):
         s = socket.socket(
