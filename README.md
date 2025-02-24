@@ -10,6 +10,7 @@ It supports rendering web pages from http, https, and data URLs, as well as disp
 - View page source with `view-source:` prefix
 - Basic HTML rendering
 - Persistent connection for requests with the same host
+- Support for `max-age` caching
 
 ## Usage
 

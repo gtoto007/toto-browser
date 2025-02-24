@@ -1,5 +1,6 @@
 import socket
 import ssl
+from cache_browser import CacheBrowser
 
 
 class WEB_URL:
@@ -7,6 +8,8 @@ class WEB_URL:
     sockets = {}
 
     def __init__(self, url):
+
+        self.original_url = url
 
         if url.startswith("view-source:"):
             url = url.replace("view-source:", "")
@@ -40,15 +43,20 @@ class WEB_URL:
 
     def request(self):
         if self.scheme == "file":
-            return self.file_request()
+            return self._file_request()
         else:
-            return self.web_request()
+            return self._web_request()
 
-    def file_request(self):
+    def _file_request(self):
         with open(self.path, "r") as f:
             return [], 200, f.read()
 
-    def web_request(self):
+    def _web_request(self):
+        cache = CacheBrowser()
+        if cache.has_valid_cache(self.host):
+            headers, content = cache.get_cached_file(self.host)
+            return headers, 200, content
+
         request = f"GET {self.path} HTTP/1.1\r\n"
 
         headers = []
@@ -57,14 +65,14 @@ class WEB_URL:
         headers.append("User-Agent: TotoBrowser")
 
         request += "\r\n".join(headers) + "\r\n\r\n"
-        socket = self.get_socket(self.scheme, self.host, self.port)
+        socket = self._get_socket(self.scheme, self.host, self.port)
         socket.send(request.encode("utf-8"))
         response = socket.makefile(
             "rb", encoding="utf8", newline="\r\n", errors="replace"
         )
         line = response.readline().decode("utf-8")  #'HTTP/1.0 200 OK
         version, status, explanation = line.split(" ", 2)
-
+        status = int(status)
         response_headers = {}
         while True:
             line = response.readline().decode("utf-8")
@@ -74,13 +82,17 @@ class WEB_URL:
             key, value = line.split(":", 1)
             response_headers[key.casefold()] = value.strip()
 
-        content = response.read(int(response_headers.get("content-length", 0))).decode(
-            "utf-8"
-        )
+        content = response.read(int(response_headers.get("content-length", 0)))
+
+        if "max-age" in response_headers.get("cache-control", ""):
+            cache.save_to_cache(self.original_url, content, response_headers)
+
+        if isinstance(content, str):
+            content = content.encode("utf-8")
 
         return response_headers, status, content
 
-    def is_socket_valid(self, sock):
+    def _is_socket_valid(self, sock):
         try:
             # Check if the socket is closed or invalid
             sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
@@ -88,15 +100,17 @@ class WEB_URL:
         except (socket.error, OSError):
             return False
 
-    def get_socket(self, scheme, host, port):
+    def _get_socket(self, scheme, host, port):
         key = scheme + "://" + host
-        if self.host not in WEB_URL.sockets or not self.is_socket_valid(
+        if self.host not in WEB_URL.sockets or not self._is_socket_valid(
             WEB_URL.sockets[key]
         ):
-            WEB_URL.sockets[key] = self.create_socket(self.scheme, self.host, self.port)
+            WEB_URL.sockets[key] = self._create_socket(
+                self.scheme, self.host, self.port
+            )
         return WEB_URL.sockets[key]
 
-    def create_socket(self, scheme, host, port):
+    def _create_socket(self, scheme, host, port):
         s = socket.socket(
             family=socket.AF_INET, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP
         )
@@ -106,11 +120,11 @@ class WEB_URL:
         s.connect((host, port))
         return s
 
-    def get_path(self):
+    def _get_path(self):
         return self.path
 
-    def get_host(self):
+    def _get_host(self):
         return self.host
 
-    def get_scheme(self):
+    def _get_scheme(self):
         return self.scheme

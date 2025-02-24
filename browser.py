@@ -1,6 +1,5 @@
 from pprint import pprint
 from idlelib.rpc import response_queue
-
 from URLs.URL import URL
 
 MAX_REDIRECTS = 4
@@ -11,7 +10,7 @@ def render(url, redirect_count=0):
     headers, status, body = url.request()
     print("Response Headers:")
     pprint(headers)
-    if (status >= "300" and status < "400") and "location" in headers:
+    if status is not None and status >= 300 and status < 400 and "location" in headers:
         if redirect_count >= MAX_REDIRECTS:
             raise "Too many redirects"
 
