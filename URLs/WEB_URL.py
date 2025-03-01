@@ -42,6 +42,19 @@ class WEB_URL:
             self.port = int(self.port)
 
     def request(self):
+        """
+        Performs an HTTP/HTTPS request or file read based on the URL scheme.
+
+        Returns:
+            tuple: A tuple containing three elements:
+                - headers (dict): Response headers for web requests, empty list for file requests
+                - status (int): HTTP status code (200 for successful file requests)
+                - content (str/bytes): The response body or file contents
+
+        Note:
+            For web requests, it first checks the cache before making a new request.
+            For file requests, it reads directly from the local filesystem.
+        """
         if self.scheme == "file":
             return self._file_request()
         else:
@@ -49,7 +62,7 @@ class WEB_URL:
 
     def _file_request(self):
         with open(self.path, "r") as f:
-            return [], 200, f.read()
+            return {}, 200, f.read()
 
     def _web_request(self):
         cache = CacheBrowser()
@@ -63,6 +76,7 @@ class WEB_URL:
         headers.append(f"Host: {self.host}")
         headers.append("Connection: keep-alive")
         headers.append("User-Agent: TotoBrowser")
+        headers.append("Accept-Encoding: gzip")
 
         request += "\r\n".join(headers) + "\r\n\r\n"
         socket = self._get_socket(self.scheme, self.host, self.port)
@@ -83,6 +97,10 @@ class WEB_URL:
             response_headers[key.casefold()] = value.strip()
 
         content = response.read(int(response_headers.get("content-length", 0)))
+        if response_headers.get("content-encoding") == "gzip":
+            import gzip
+
+            content = gzip.decompress(content)
 
         if "max-age" in response_headers.get("cache-control", ""):
             cache.save_to_cache(self.original_url, content, response_headers)
