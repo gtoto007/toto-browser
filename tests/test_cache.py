@@ -12,7 +12,7 @@ def test_cache_asset():
     ##Act
     cache_browser = CacheBrowser()
     cache_browser.save_to_cache(
-        "http://www.example.com/asset.jpg", asset, {"max-age": 200}
+        "http://www.example.com/asset.jpg", asset, {"cache-control": "max-age=200"}
     )
 
     # Assert
@@ -23,4 +23,4 @@ def test_cache_asset():
     )
 
     assert hashlib.md5(asset).hexdigest() == hashlib.md5(retrieved_asset).hexdigest()
-    assert headers["max-age"] == 200
+    assert headers['cache-control'] == "max-age=200"
