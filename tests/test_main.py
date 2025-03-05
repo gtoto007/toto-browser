@@ -1,7 +1,8 @@
 import unittest
 from URLs.WEB_URL import WEB_URL
 from main import render
-from CacheBrowser import CacheBrowser
+from Cache import Cache
+
 
 class TestMain(unittest.TestCase):
     def test_render(self):
@@ -10,7 +11,7 @@ class TestMain(unittest.TestCase):
         self.assertIsNone(render("view-source:http://example.com"))
 
     def test_cache_request(self):
-        cache = CacheBrowser()
+        cache = Cache()
         cache.reset()
         url = "https://static.anonymised.io/light/retargeting.js"
         browser = WEB_URL(url)

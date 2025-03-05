@@ -1,6 +1,6 @@
 import socket
 import ssl
-from CacheBrowser import CacheBrowser
+from Cache import Cache
 
 
 class WEB_URL:
@@ -67,7 +67,7 @@ class WEB_URL:
             return {}, 200, f.read()
 
     def _web_request(self):
-        cache = CacheBrowser()
+        cache = Cache()
         if cache.has_valid_cache(self.host):
             headers, content = cache.get_cached_file(self.host)
             return headers, 200, content

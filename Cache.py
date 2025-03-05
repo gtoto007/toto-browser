@@ -4,7 +4,6 @@ import json
 
 from datetime import datetime, timedelta
 import re
-import time
 
 
 _cache_dir = "cache"
@@ -12,7 +11,7 @@ _cache_dir = "cache"
 _caches = {}
 
 
-class CacheBrowser:
+class Cache:
     def __init__(self):
         if not os.path.exists(_cache_dir):
             os.makedirs(_cache_dir)
