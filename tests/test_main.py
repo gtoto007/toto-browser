@@ -1,8 +1,7 @@
 import unittest
 from URLs.WEB_URL import WEB_URL
-from browser import render
-from cache_browser import CacheBrowser
-
+from main import render
+from CacheBrowser import CacheBrowser
 
 class TestMain(unittest.TestCase):
     def test_render(self):

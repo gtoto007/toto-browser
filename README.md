@@ -11,8 +11,9 @@ It supports rendering web pages from http, https, and data URLs, as well as disp
 - Basic HTML rendering
 - Persistent connection for requests with the same host
 - Supported Response Headers
-    - `cache-control`: Supports `max-age` directive
-    - `content-encoding`: Supports `gzip` compression
+    - `cache-control`: Supports `max-age` directive (specifies the maximum amount of time a resource is considered fresh)
+    - `content-encoding`: Supports `gzip` compression (allows response to be compressed )
+    - `transfer-encoding`: Supports `chunked` directive (allows response to be received in a series of chunks)
 
 
 ## Usage

@@ -1,6 +1,6 @@
 import hashlib
 import os
-from cache_browser import CacheBrowser
+from CacheBrowser import CacheBrowser
 
 
 def test_cache_asset():

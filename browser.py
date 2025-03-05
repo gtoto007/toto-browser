@@ -1,77 +1,66 @@
-from pprint import pprint
-from idlelib.rpc import response_queue
+import tkinter
+import random
+import math
+
 from URLs.URL import URL
 
-MAX_REDIRECTS = 4
+WIDTH, HEIGHT = 800, 600
 
 
-def render(url, redirect_count=0):
-    url = URL.build(url)
-    headers, status, body = url.request()
-    print("Response Headers:")
-    pprint(headers)
-    if status is not None and status >= 300 and status < 400 and "location" in headers:
-        if redirect_count >= MAX_REDIRECTS:
-            raise "Too many redirects"
-
-        print("Redirecting to: ", headers["location"])
-        render(headers["location"], redirect_count + 1)
-        return
-
-    print("Body")
-    show(body, url.view_source)
+def random_color():
+    """Generate a random color in hex format."""
+    r = random.randint(0, 255)
+    g = random.randint(0, 255)
+    b = random.randint(0, 255)
+    return f"#{r:02x}{g:02x}{b:02x}"
 
 
-def show(body, view_source):
-    import re
+class Browser:
+    def __init__(self):
+        self.window = tkinter.Tk()
+        self.window.title("Toto Browser")
+        self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
 
-    if view_source:
-        print(body)
-        return
+        self.canvas.pack()
+        self.window.focus_force()
 
-    in_tag = False
-    for c in body:
-        if c == "<":
-            in_tag = True
-        elif c == ">":
-            in_tag = False
-        elif in_tag and c == "/":
-            print("\n", end="")
-        elif not in_tag and c != "\n":
-            # Replace HTML entities with their corresponding characters
-            if c == "&lt;":
-                c = "<"
-            elif c == "&gt;":
-                c = ">"
+    def load(self, url):
+        url = URL.build(url)
+        headers, status, content = url.request()
+        text = self.lex(content)[:200]
+        self.canvas.create_text(
+            20,
+            20,
+            text=text,
+            font=("Helvetica", 12),
+            fill="black",
+            anchor=tkinter.NW,  # Anchor the text to the north (top)
+        )
+        self.window.mainloop()
 
-            print(c, end="")
+    def lex(self, content):
+        import re
 
+        in_tag = False
+        text = ""
+        for c in content:
+            if c == "<":
+                in_tag = True
+            elif c == ">":
+                in_tag = False
+            elif in_tag and c == "/":
+                text += "\n"
+            elif not in_tag and c != "\n":
+                # Replace HTML entities with their corresponding characters
+                if c == "&lt;":
+                    text += "<"
+                elif c == "&gt;":
+                    text += ">"
 
-def main():
-    import sys
-
-    # Get URLs from command line arguments, use default if none provided
-    # e.g. python browser.py "https://example.com" "data:text/html,<h1>Hello world!</h1>" "view-source:http://example.com"
-    urls = (
-        sys.argv[1:]
-        if len(sys.argv) > 1
-        else [
-            "https://www.freesoft.org/CIE/Topics/4.htm",
-            "https://www.freesoft.org/CIE/Topics/88.htm",
-            "view-source:http://giuseppetoto.it",
-        ]
-    )
-
-    for url in urls:
-        # Handle quoted URLs by removing outer quotes if present
-        if (url.startswith('"') and url.endswith('"')) or (
-            url.startswith("'") and url.endswith("'")
-        ):
-            url = url[1:-1]
-
-        print(f"\n--- Rendering {url} ---\n")
-        render(url)
+                text += c
+        return text
 
 
 if __name__ == "__main__":
-    main()
+    browser = Browser()
+    browser.load("https://giuseppetoto.it/what-story-point-actually-is-bddd403504db")

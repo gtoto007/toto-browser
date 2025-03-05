@@ -1,11 +1,13 @@
 import socket
 import ssl
-from cache_browser import CacheBrowser
+from CacheBrowser import CacheBrowser
 
 
 class WEB_URL:
     # define a static dictionary to store the sockets for each single url
     sockets = {}
+    redirect_count = 0
+    MAX_REDIRECTS = 5
 
     def __init__(self, url):
 
@@ -96,7 +98,30 @@ class WEB_URL:
             key, value = line.split(":", 1)
             response_headers[key.casefold()] = value.strip()
 
-        content = response.read(int(response_headers.get("content-length", 0)))
+        if (
+            status is not None
+            and status >= 300
+            and status < 400
+            and "location" in response_headers
+        ):
+            return self.redirect(response_headers["location"])
+
+        WEB_URL.redirect_count = 0
+
+        if "chunked" in response_headers.get("transfer-encoding", ""):
+            content = b""
+            while True:
+                line = response.readline()
+                if line == b"\r\n":
+                    continue
+                chunk_size = int(line, 16)
+                if chunk_size == 0:
+                    response.readline()
+                    break
+                content += response.read(chunk_size)
+        else:
+            content = response.read(int(response_headers.get("content-length", 0)))
+
         if response_headers.get("content-encoding") == "gzip":
             import gzip
 
@@ -105,10 +130,21 @@ class WEB_URL:
         if "max-age" in response_headers.get("cache-control", ""):
             cache.save_to_cache(self.original_url, content, response_headers)
 
-        if isinstance(content, str):
-            content = content.encode("utf-8")
+        try:
+            content = content.decode("utf-8")
+        except UnicodeDecodeError:
+            pass
 
         return response_headers, status, content
+
+    def redirect(self, url):
+        if WEB_URL.redirect_count >= WEB_URL.MAX_REDIRECTS:
+            WEB_URL.redirect_count = 0
+            raise "Too many redirects"
+
+        WEB_URL.redirect_count += 1
+        browser = WEB_URL(url)
+        return browser.request()
 
     def _is_socket_valid(self, sock):
         try:
